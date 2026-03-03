@@ -6,6 +6,12 @@ Drop-in email inbox for Next.js. Unlimited identities on any verified domain. Po
 npm install sendbox
 ```
 
+Or install from GitHub (the `prepare` script auto-builds `dist/`):
+
+```
+npm install github:coreyepstein/sendbox
+```
+
 ## What You Get
 
 - **Send email** from any `@yourdomain.com` address
@@ -172,15 +178,28 @@ Both accept `HandlerOptions`:
 
 ## Custom SQL Adapter
 
-By default, sendbox uses `@neondatabase/serverless`. To use a different Postgres client:
+By default, sendbox uses `@neondatabase/serverless`, which connects through Neon's HTTP proxy (`api.{host}`). This only works with Neon Postgres — Supabase, Railway, and self-hosted databases need a custom SQL executor.
+
+Pass any tagged-template function to `configureSendbox()` that returns `Promise<Record<string, unknown>[]>`.
+
+### postgres.js (Supabase, Railway, etc.)
+
+[postgres](https://github.com/porsager/postgres) supports tagged templates natively:
 
 ```ts
+// lib/sendbox.ts — import this file in your API routes
 import { configureSendbox } from "sendbox";
 import postgres from "postgres";
 
-const sql = postgres(process.env.DATABASE_URL!);
-configureSendbox({ sql: sql as any });
+const sql = postgres(process.env.DATABASE_URL!, { ssl: "require" });
+
+configureSendbox({
+  sql: (strings, ...values) =>
+    sql(strings, ...values).then((rows) => rows.map((r) => ({ ...r }))),
+});
 ```
+
+> **Supabase:** Use the connection pooler URL (`postgresql://postgres.{ref}:{password}@aws-0-{region}.pooler.supabase.com:5432/postgres`), not the direct `db.{ref}.supabase.co` URL.
 
 ## Architecture
 
@@ -194,7 +213,7 @@ UI:       React components fetch from /api/* routes
 
 - Next.js 14+
 - React 18+
-- PostgreSQL (Neon recommended for serverless)
+- PostgreSQL (Neon, Supabase, or any Postgres — see [Custom SQL Adapter](#custom-sql-adapter) for non-Neon setups)
 - [Resend](https://resend.com) account with verified domain
 - Tailwind CSS (for UI components)
 
