@@ -108,9 +108,10 @@ export function createWebhookHandler(options?: HandlerOptions) {
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
 
-      // Identity-not-found is a client-ish error (unknown recipient)
+      // Identity-not-found: return 200 so webhook providers (Svix) don't
+      // auto-disable the endpoint after repeated "failures" for unknown recipients.
       if (message.startsWith("No identity found")) {
-        return Response.json({ error: message }, { status: 422 });
+        return Response.json({ ok: true, skipped: message }, { status: 200 });
       }
 
       console.error("[sendbox] Error processing inbound:", message);
