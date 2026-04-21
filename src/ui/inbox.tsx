@@ -176,11 +176,13 @@ function ThreadRow({
 function ComposeModal({
   identities,
   apiBase,
+  apiPrefix,
   onClose,
   onSent,
 }: {
   identities: IdentityOption[];
   apiBase: string;
+  apiPrefix: string;
   onClose: () => void;
   onSent: (threadId: string) => void;
 }) {
@@ -203,7 +205,7 @@ function ComposeModal({
     try {
       const fromEmail = selected ? `${selected.name} <${selected.email}>` : "";
 
-      const res = await fetch(`${apiBase}/api/emails/send`, {
+      const res = await fetch(`${apiBase}${apiPrefix}/emails/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -331,6 +333,8 @@ function ComposeModal({
 export interface InboxProps {
   /** Base URL for API calls. Defaults to "". */
   apiBase?: string;
+  /** Path prefix appended to apiBase before each resource. Defaults to "/api". */
+  apiPrefix?: string;
   /** Called when a thread is clicked. Receives thread ID. */
   onThreadClick?: (threadId: string) => void;
   className?: string;
@@ -341,6 +345,7 @@ export interface InboxProps {
  */
 export function Inbox({
   apiBase = "",
+  apiPrefix = "/api",
   onThreadClick,
   className,
 }: InboxProps) {
@@ -355,8 +360,8 @@ export function Inbox({
       setLoading(true);
       try {
         const url = identityId
-          ? `${apiBase}/api/threads?identity_id=${identityId}`
-          : `${apiBase}/api/threads`;
+          ? `${apiBase}${apiPrefix}/threads?identity_id=${identityId}`
+          : `${apiBase}${apiPrefix}/threads`;
         const res = await fetch(url);
         const data = await res.json();
         setThreads(data.threads ?? []);
@@ -366,18 +371,18 @@ export function Inbox({
         setLoading(false);
       }
     },
-    [apiBase]
+    [apiBase, apiPrefix]
   );
 
   const fetchIdentities = useCallback(async () => {
     try {
-      const res = await fetch(`${apiBase}/api/identities`);
+      const res = await fetch(`${apiBase}${apiPrefix}/identities`);
       const data = await res.json();
       setIdentities(data.identities ?? []);
     } catch {
       // Identities endpoint may not exist yet
     }
-  }, [apiBase]);
+  }, [apiBase, apiPrefix]);
 
   useEffect(() => {
     fetchIdentities();
@@ -454,6 +459,7 @@ export function Inbox({
         <ComposeModal
           identities={identities}
           apiBase={apiBase}
+          apiPrefix={apiPrefix}
           onClose={() => setShowCompose(false)}
           onSent={handleComposeSent}
         />

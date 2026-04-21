@@ -101,11 +101,13 @@ function ReplyComposer({
   thread,
   lastInboundEmail,
   apiBase,
+  apiPrefix,
   onSent,
 }: {
   thread: ThreadDetail;
   lastInboundEmail: string | null;
   apiBase: string;
+  apiPrefix: string;
   onSent: () => void;
 }) {
   const [to, setTo] = useState(lastInboundEmail ?? "");
@@ -124,7 +126,7 @@ function ReplyComposer({
     setError(null);
 
     try {
-      const res = await fetch(`${apiBase}/api/emails/send`, {
+      const res = await fetch(`${apiBase}${apiPrefix}/emails/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -218,6 +220,8 @@ export interface ThreadProps {
   threadId: string;
   /** Base URL for API calls. Defaults to "". */
   apiBase?: string;
+  /** Path prefix appended to apiBase before each resource. Defaults to "/api". */
+  apiPrefix?: string;
   /** Called when the back button is clicked. */
   onBack?: () => void;
   className?: string;
@@ -229,6 +233,7 @@ export interface ThreadProps {
 export function Thread({
   threadId,
   apiBase = "",
+  apiPrefix = "/api",
   onBack,
   className,
 }: ThreadProps) {
@@ -240,7 +245,7 @@ export function Thread({
 
   const fetchThread = useCallback(async () => {
     try {
-      const res = await fetch(`${apiBase}/api/threads/${threadId}`);
+      const res = await fetch(`${apiBase}${apiPrefix}/threads/${threadId}`);
       if (!res.ok) {
         if (res.status === 404) throw new Error("Thread not found");
         throw new Error("Failed to load thread");
@@ -254,7 +259,7 @@ export function Thread({
     } finally {
       setLoading(false);
     }
-  }, [apiBase, threadId]);
+  }, [apiBase, apiPrefix, threadId]);
 
   useEffect(() => {
     fetchThread();
@@ -351,6 +356,7 @@ export function Thread({
           thread={thread}
           lastInboundEmail={lastInbound?.from_email ?? null}
           apiBase={apiBase}
+          apiPrefix={apiPrefix}
           onSent={fetchThread}
         />
       </div>

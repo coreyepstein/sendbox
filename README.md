@@ -168,13 +168,15 @@ Both accept `HandlerOptions`:
 
 ### `sendbox/ui`
 
-**`<Inbox />`** — Thread list with identity filter and compose modal. Props: `apiBase?`, `onThreadClick?`, `className?`
+**`<Inbox />`** — Thread list with identity filter and compose modal. Props: `apiBase?`, `apiPrefix?`, `onThreadClick?`, `className?`
 
-**`<Thread />`** — Conversation view with reply composer. Props: `threadId`, `apiBase?`, `onBack?`, `className?`
+**`<Thread />`** — Conversation view with reply composer. Props: `threadId`, `apiBase?`, `apiPrefix?`, `onBack?`, `className?`
 
-**`<Identities />`** — Identity CRUD. Props: `apiBase?`, `domain?`, `className?`
+**`<Identities />`** — Identity CRUD. Props: `apiBase?`, `apiPrefix?`, `domain?`, `className?`
 
 **`<InboxLayout />`** — Tab navigation wrapper. Props: `basePath?`, `className?`
+
+**Path configuration** — All three components build URLs as `{apiBase}{apiPrefix}/{resource}`. Default `apiBase=""` and `apiPrefix="/api"` yield `/api/threads`, `/api/identities`, `/api/emails/send` (matches the built-in handlers when mounted at `/api/*`). To host the handlers under a different prefix (e.g. `/api/inbox/*`), pass `apiPrefix="/api/inbox"` — and ensure your server mounts the send handler at `{prefix}/emails/send` (the other paths — `threads`, `identities` — are already just appended).
 
 ## Custom SQL Adapter
 

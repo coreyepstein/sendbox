@@ -14,6 +14,8 @@ interface IdentityItem {
 export interface IdentitiesProps {
   /** Base URL for API calls. Defaults to "". */
   apiBase?: string;
+  /** Path prefix appended to apiBase before each resource. Defaults to "/api". */
+  apiPrefix?: string;
   /** Placeholder domain for the email field. */
   domain?: string;
   className?: string;
@@ -24,6 +26,7 @@ export interface IdentitiesProps {
  */
 export function Identities({
   apiBase = "",
+  apiPrefix = "/api",
   domain,
   className,
 }: IdentitiesProps) {
@@ -42,7 +45,7 @@ export function Identities({
 
   const fetchIdentities = useCallback(async () => {
     try {
-      const res = await fetch(`${apiBase}/api/identities`);
+      const res = await fetch(`${apiBase}${apiPrefix}/identities`);
       if (!res.ok) throw new Error("Failed to fetch identities");
       const data = await res.json();
       setIdentities(data.identities);
@@ -52,7 +55,7 @@ export function Identities({
     } finally {
       setLoading(false);
     }
-  }, [apiBase]);
+  }, [apiBase, apiPrefix]);
 
   useEffect(() => {
     fetchIdentities();
@@ -64,7 +67,7 @@ export function Identities({
 
     setSubmitting(true);
     try {
-      const res = await fetch(`${apiBase}/api/identities`, {
+      const res = await fetch(`${apiBase}${apiPrefix}/identities`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -92,7 +95,7 @@ export function Identities({
 
   async function handleDelete(id: string) {
     try {
-      const res = await fetch(`${apiBase}/api/identities/${id}`, { method: "DELETE" });
+      const res = await fetch(`${apiBase}${apiPrefix}/identities/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Failed to delete identity");
