@@ -20,7 +20,7 @@ export default defineConfig([
     },
     format: ["esm", "cjs"],
     dts: true,
-    splitting: true,
+    splitting: false, // inline types so d.ts doesn't reference nonexistent subpaths
     clean: false, // don't wipe the backend output
     external: ["react", "react-dom", "next", "next/link", "next/navigation"],
     esbuildOptions(options) {
