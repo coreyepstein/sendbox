@@ -1,6 +1,6 @@
 {
   "name": "sendbox",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Drop-in email inbox for Next.js — unlimited identities, powered by Resend + Postgres",
   "license": "MIT",
   "author": "Corey Epstein",

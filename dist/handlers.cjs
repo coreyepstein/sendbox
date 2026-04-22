@@ -14,16 +14,18 @@ function createSendHandler(options) {
         await options.authorize(request);
       }
       const body = await request.json();
-      const { from, to, subject, body_html, identity_id, thread_id } = body;
+      const { from, to, cc, subject, body_html, identity_id, thread_id } = body;
       if (!from || !to || !subject || !body_html || !identity_id) {
         return Response.json(
           { error: "Missing required fields: from, to, subject, body_html, identity_id" },
           { status: 400 }
         );
       }
+      const ccList = Array.isArray(cc) ? cc.filter((s) => typeof s === "string" && s.length > 0) : typeof cc === "string" && cc.length > 0 ? [cc] : [];
       const { data, error } = await _chunkI6ABYSIVcjs.getResend.call(void 0, ).emails.send({
         from,
         to,
+        ...ccList.length > 0 ? { cc: ccList } : {},
         subject,
         html: body_html
       });
@@ -56,6 +58,7 @@ function createSendHandler(options) {
         direction: "outbound",
         from_email: from,
         to_email: to,
+        cc: ccList,
         subject,
         body_html
       });

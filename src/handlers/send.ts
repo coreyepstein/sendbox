@@ -5,6 +5,7 @@ import type { HandlerOptions } from "../types.js";
 interface SendEmailBody {
   from: string;
   to: string;
+  cc?: string | string[];
   subject: string;
   body_html: string;
   identity_id: string;
@@ -31,7 +32,7 @@ export function createSendHandler(options?: HandlerOptions) {
 
       const body = (await request.json()) as SendEmailBody;
 
-      const { from, to, subject, body_html, identity_id, thread_id } = body;
+      const { from, to, cc, subject, body_html, identity_id, thread_id } = body;
       if (!from || !to || !subject || !body_html || !identity_id) {
         return Response.json(
           { error: "Missing required fields: from, to, subject, body_html, identity_id" },
@@ -39,10 +40,17 @@ export function createSendHandler(options?: HandlerOptions) {
         );
       }
 
+      const ccList = Array.isArray(cc)
+        ? cc.filter((s) => typeof s === "string" && s.length > 0)
+        : typeof cc === "string" && cc.length > 0
+          ? [cc]
+          : [];
+
       // Send email via Resend
       const { data, error } = await getResend().emails.send({
         from,
         to,
+        ...(ccList.length > 0 ? { cc: ccList } : {}),
         subject,
         html: body_html,
       });
@@ -83,6 +91,7 @@ export function createSendHandler(options?: HandlerOptions) {
         direction: "outbound",
         from_email: from,
         to_email: to,
+        cc: ccList,
         subject,
         body_html,
       });
