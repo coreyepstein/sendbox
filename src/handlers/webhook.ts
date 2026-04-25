@@ -46,11 +46,24 @@ export function createWebhookHandler(options?: HandlerOptions) {
 
       // Only handle email.received events
       if (event.type !== "email.received") {
+        console.log(
+          "[sendbox] Webhook skipped: non-received event type",
+          JSON.stringify({ type: event.type ?? null })
+        );
         return Response.json({ ok: true, skipped: event.type }, { status: 200 });
       }
 
       const { data } = event;
-      if (!data.email_id || !data.from || !data.to?.length || !data.subject) {
+      if (!data?.email_id || !data?.from || !data?.to?.length || !data?.subject) {
+        console.error(
+          "[sendbox] Webhook rejected: missing required fields",
+          JSON.stringify({
+            email_id: data?.email_id ?? null,
+            from: data?.from ?? null,
+            to_count: data?.to?.length ?? 0,
+            subject_present: Boolean(data?.subject),
+          })
+        );
         return Response.json(
           { error: "Missing required fields in webhook data" },
           { status: 400 }
@@ -111,6 +124,7 @@ export function createWebhookHandler(options?: HandlerOptions) {
       // Identity-not-found: return 200 so webhook providers (Svix) don't
       // auto-disable the endpoint after repeated "failures" for unknown recipients.
       if (message.startsWith("No identity found")) {
+        console.warn("[sendbox] Webhook skipped: no matching identity:", message);
         return Response.json({ ok: true, skipped: message }, { status: 200 });
       }
 
