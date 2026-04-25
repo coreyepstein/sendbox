@@ -94,10 +94,23 @@ function createWebhookHandler(options) {
       }
       const event = await request.json();
       if (event.type !== "email.received") {
+        console.log(
+          "[sendbox] Webhook skipped: non-received event type",
+          JSON.stringify({ type: _nullishCoalesce(event.type, () => ( null)) })
+        );
         return Response.json({ ok: true, skipped: event.type }, { status: 200 });
       }
       const { data } = event;
-      if (!data.email_id || !data.from || !_optionalChain([data, 'access', _5 => _5.to, 'optionalAccess', _6 => _6.length]) || !data.subject) {
+      if (!_optionalChain([data, 'optionalAccess', _5 => _5.email_id]) || !_optionalChain([data, 'optionalAccess', _6 => _6.from]) || !_optionalChain([data, 'optionalAccess', _7 => _7.to, 'optionalAccess', _8 => _8.length]) || !_optionalChain([data, 'optionalAccess', _9 => _9.subject])) {
+        console.error(
+          "[sendbox] Webhook rejected: missing required fields",
+          JSON.stringify({
+            email_id: _nullishCoalesce(_optionalChain([data, 'optionalAccess', _10 => _10.email_id]), () => ( null)),
+            from: _nullishCoalesce(_optionalChain([data, 'optionalAccess', _11 => _11.from]), () => ( null)),
+            to_count: _nullishCoalesce(_optionalChain([data, 'optionalAccess', _12 => _12.to, 'optionalAccess', _13 => _13.length]), () => ( 0)),
+            subject_present: Boolean(_optionalChain([data, 'optionalAccess', _14 => _14.subject]))
+          })
+        );
         return Response.json(
           { error: "Missing required fields in webhook data" },
           { status: 400 }
@@ -130,7 +143,7 @@ function createWebhookHandler(options) {
         message_id: fullEmail.message_id
       };
       const result = await _chunkI6ABYSIVcjs.processInboundEmail.call(void 0, payload);
-      if (_optionalChain([options, 'optionalAccess', _7 => _7.onMessageReceived])) {
+      if (_optionalChain([options, 'optionalAccess', _15 => _15.onMessageReceived])) {
         await options.onMessageReceived(result);
       }
       return Response.json(
@@ -145,6 +158,7 @@ function createWebhookHandler(options) {
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       if (message.startsWith("No identity found")) {
+        console.warn("[sendbox] Webhook skipped: no matching identity:", message);
         return Response.json({ ok: true, skipped: message }, { status: 200 });
       }
       console.error("[sendbox] Error processing inbound:", message);
